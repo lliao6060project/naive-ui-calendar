@@ -23,9 +23,13 @@ export interface ReturnUseCalendarEvents {
   showDetailDrawer: Ref<boolean>
 
   restructureData: (data: CustomEvent[]) => RestructureEvent[]
-  resetDetailForm: (data: unknown | RestructureEvent[]) => void
+
   handleUpdateEventList: (addNewEventArray: CustomEvent[], type: 'add' | 'edit') => Recordable[]
+  handleUpdateCurrentDateEvent: (data: Recordable[], currentDate: string) => CustomEvent[]
+
+  handleOpenEditModal: (eventTarget: unknown | Partial<RestructureEventItem>) => void 
   handleEventDelete: (data: unknown | RestructureEvent[]) => void
+  resetDetailForm: (data: unknown | RestructureEvent[]) => void
 }
 
 const { format } = useDateUtils()
@@ -84,25 +88,7 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
     return returnResult
   }
 
-  function resetDetailForm(data: unknown | RestructureEvent[]) {
-    const copidData = JSON.parse(JSON.stringify(data))
-    const originData = copidData.map((item: RestructureEvent) => {
-      if(handleCompareDate(item.date, propsData.value.date)) {
-        return item.event.find((item: RestructureEventItem) => {
-          return item.id === propsData.value.id
-        })
-      }
-    })
-
-    const matchedData = originData.filter(Boolean)
-    
-    loading.value = true
-    nextTick(() => {
-      updatePropsData(matchedData[0])
-      loading.value = false
-    });
-  }
-
+  //handle event methods
   function handleUpdateEventList(addNewEventArray: CustomEvent[], type: 'add' | 'edit' = 'add') {
     let result: Recordable[] = []
 
@@ -129,6 +115,30 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
     return result
   }
 
+  function handleUpdateCurrentDateEvent(data: Recordable[], currentDate: string) {
+    let result: CustomEvent[] = []
+    data.forEach((item) => {
+      const isCurrentDate = handleCompareDate(currentDate, item.date)
+      if(isCurrentDate) {
+        result = item.event.map((eventItem: Event) => {
+          return {
+            ...eventItem,
+          }
+        })
+      }
+    })
+
+    return [...result]
+  }
+
+  //modal
+  //edit & delete
+  function handleOpenEditModal(eventTarget: unknown | Partial<RestructureEventItem>) {
+    const copidData = JSON.parse(JSON.stringify(eventTarget))
+    updatePropsData(copidData)
+    toggleEditDialogFormVisible(true)
+  }
+
   function handleEventDelete(data: unknown | RestructureEvent[]) {
     (data as RestructureEvent[]).map((item: RestructureEvent) => {
       if(handleCompareDate(item.date, propsData.value.date)) {
@@ -150,6 +160,26 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
     });
   }
 
+  function resetDetailForm(data: unknown | RestructureEvent[]) {
+    const copidData = JSON.parse(JSON.stringify(data))
+    const originData = copidData.map((item: RestructureEvent) => {
+      if(handleCompareDate(item.date, propsData.value.date)) {
+        return item.event.find((item: RestructureEventItem) => {
+          return item.id === propsData.value.id
+        })
+      }
+    })
+
+    const matchedData = originData.filter(Boolean)
+    
+    loading.value = true
+    nextTick(() => {
+      updatePropsData(matchedData[0])
+      loading.value = false
+    });
+  }
+
+
   function groupBy(objectArray: Recordable[], property: string) {
     return objectArray.reduce(function (acc, obj) {
       const key = obj[property];
@@ -165,8 +195,12 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
     showDetailDrawer,
 
     restructureData,
-    resetDetailForm,
+
     handleUpdateEventList,
+    handleUpdateCurrentDateEvent,
+
+    handleOpenEditModal,
     handleEventDelete,
+    resetDetailForm,
   }
 }

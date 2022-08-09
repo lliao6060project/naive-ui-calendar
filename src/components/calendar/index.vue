@@ -31,9 +31,13 @@
     showDetailDrawer,
     
     restructureData,
-    resetDetailForm, 
+    
     handleUpdateEventList,
-    handleEventDelete 
+    handleUpdateCurrentDateEvent,
+
+    handleOpenEditModal,
+    handleEventDelete,
+    resetDetailForm,
   } = useCalendarEvents()
 
   const { 
@@ -130,31 +134,15 @@
   function handleUpdateCalendarValue(date: string) {
     currentDate.value = date
     currentDay.value = dayjs(date).get('day')
-    handleUpdateCurrentDateEvent()
+    currentDateEvent.value = handleUpdateCurrentDateEvent(data.value, currentDate.value)
     showDetailDrawer.value = true
   }
-
   //custom
   function handlePreviewCustomEvent(customEvent: unknown | RestructureEvent, index: number) {
     currentDate.value = (customEvent as RestructureEvent).date
     handleEditEvent((customEvent as RestructureEvent).event[index])
   }
 
-  function handleUpdateCurrentDateEvent() {
-    let result:CustomEvent[] = []
-    data.value.forEach((item) => {
-      const isCurrentDate = handleCompareDate(currentDate.value, item.date)
-      if(isCurrentDate) {
-        result = item.event.map((eventItem: Event) => {
-          return {
-            ...eventItem,
-          }
-        })
-      }
-    })
-
-    currentDateEvent.value = [...result]
-  }
 
   //modal
   function handleAddNewEvent(newEvent: unknown | Partial<RestructureEventItem>) {
@@ -269,7 +257,7 @@
             <th>時間</th>
             <th>標題</th>
             <th>備註</th>
-            <th>action</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
