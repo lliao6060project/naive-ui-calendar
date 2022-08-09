@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "outDir": "./",
+    "target": "esnext",
+    "module": "esnext",
+    "strict": true,
+    "jsx": "preserve",
+    "importHelpers": true,
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "types": ["node", "vite/client",],
+    "typeRoots": ["./node_modules/@types/", "./common/types"],
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
+  },
+  "include": [
+    "src/**/*.ts", 
+    "src/**/*.tsx", 
+    "src/**/*.vue", 
+    "tests/**/*.ts", 
+    "tests/**/*.tsx", "src/views/players/detail/detail-form.ts", "src/api/remock/dev.ts", "src/api/remock/remock.js", 
+  ],
+  "exclude": ["node_modules"]
+}
