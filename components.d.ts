@@ -11,7 +11,7 @@ declare module 'vue' {
     DialogcomView: typeof import('./src/components/dialogcom-view.vue')['default']
     FloatBtn: typeof import('./src/components/float-btn.vue')['default']
     GlobalComponent: typeof import('./src/components/global-component/index.vue')['default']
-    Icon: typeof import('./src/components/icon/index.vue')['default']
+    Icon: typeof import('./src/components/icon.vue')['default']
     LoadingBar: typeof import('./src/components/global-component/loading-bar/index.vue')['default']
     Message: typeof import('./src/components/global-component/message/index.vue')['default']
     NBadge: typeof import('naive-ui')['NBadge']

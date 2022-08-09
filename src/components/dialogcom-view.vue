@@ -1,35 +1,29 @@
-<script setup lang='tsx' name='DialogcomView'>
-import { defineProps, defineEmits } from 'vue'
-const dialogPropes = defineProps({
-  title: {
-    type: String,
-    default: '',
-  },
-  device: {
-    type: String,
-    default: '',
-  },
-  showDialog: {
-    type: Boolean,
-    default: false,
-    require: false,
-  },
-  showBtn: {
-    type: Object,
-    default: () => ({
+<script setup lang='ts' name='DialogcomView'>
+type ShowButton = {
+  submit: boolean
+  cancel: boolean
+}
+
+interface DialogcomProps {
+  title: string
+  device: string
+  showDialog: boolean
+  showBtn: ShowButton
+  modalType: string
+}
+
+const props = withDefaults(defineProps<DialogcomProps>(), {
+  showDialog: false,
+  showBtn: () => {
+    return {
       submit: true,
-      cancel: true,
-    }),
-  },
-  modalType: {
-    type: String,
-    default: '',
-  },
+      cancel: true
+    }
+  }
 })
 
-
 const emit = defineEmits(['submit', 'cancel'])
-const { title, device, showDialog, showBtn, modalType } = toRefs(dialogPropes)
+const { title, device, showDialog, showBtn, modalType } = toRefs(props)
 
 const segmented = {
   content: 'soft',
@@ -73,7 +67,7 @@ const deleteModalSize = {
         <n-button 
           v-if="showBtn.submit" 
           type="primary" 
-          @click="emit(&quot;submit&quot;)" 
+          @click='emit("submit")' 
           size="small"
         >確認</n-button>
         <n-button 

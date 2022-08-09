@@ -142,8 +142,8 @@ defineExpose({
 </n-form>
 </template>
 
-<style lang='scss' scoped>
-:deep(.__date-picker-trigger) {
+<style lang='scss'>
+:deep(.n-date-picker) {
   width: 100%;
 }
 </style>

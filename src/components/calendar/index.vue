@@ -359,7 +359,4 @@
 </template>
 
 <style lang='scss' scoped>
-:deep(.__date-picker-trigger) {
-  width: 100%;
-}
 </style>
