@@ -11,16 +11,16 @@ const props = withDefaults(defineProps<CalendarAddModalProps>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'NewEvent', data: Recordable[]): void
+  (e: 'NewEvent', data: Recordable): void
 }>()
 
-const {     
+const {
   importantOptions,
-  eventTypeOptions 
+  eventTypeOptions
 } = useCalendar()
 
 const tablePropsStore = useTablePropsStore()
-const { updatePropsData, updateOriginTableData, toggleAddDialogFormVisible } = tablePropsStore
+const { toggleAddDialogFormVisible } = tablePropsStore
 
 const {
   addFormRef,
@@ -47,10 +47,10 @@ function handleValidate (e: MouseEvent) {
 }
 
 function beforeAddSubmit() {
-  const newEvent = [{
+  const newEvent = {
     id: `test-e-${Math.floor(Math.random()*25)}`,
     ...addForm.value
-  }]
+  }
   emit('NewEvent', newEvent)
   toggleAddDialogFormVisible(false)
 }
@@ -70,71 +70,71 @@ defineExpose({
 
 <template>
 <n-form 
-  ref="addFormRef" 
-  :model="addForm" 
-  :rules="addFormRules" 
+  ref="addFormRef"
+  :model="addForm"
+  :rules="addFormRules"
   label-placement="top"
 >
-  <n-grid 
-    x-gap="12" 
+  <n-grid
+    x-gap="12"
     :cols="2"
   >
-    <n-form-item-gi 
-      label="title" 
+    <n-form-item-gi
+      label="title"
       path="title"
     >
       <n-input 
-        v-model:value="addForm.title" 
-        placeholder="title" 
+        v-model:value="addForm.title"
+        placeholder="title"
         clearable="clearable"
       ></n-input>
     </n-form-item-gi>
-    <n-form-item-gi 
+    <n-form-item-gi
       label="重要度"
       path="type"
     >
       <n-select 
-        v-model:value="addForm.type" 
-        filterable="filterable" 
+        v-model:value="addForm.type"
+        filterable="filterable"
         :options="importantOptions"
       ></n-select>
     </n-form-item-gi>
-    <n-form-item-gi 
-      label="時間" 
+    <n-form-item-gi
+      label="時間"
       path="time"
     >
-      <n-date-picker 
-        v-model:value="addForm.time" 
-        type="datetime" 
+      <n-date-picker
+        v-model:value="addForm.time"
+        type="datetime"
         clearable="clearable"
       ></n-date-picker>
     </n-form-item-gi>
-    <n-form-item-gi 
-      label="事件類型" 
+    <n-form-item-gi
+      label="事件類型"
       path="eventType"
     >
-      <n-select 
-        v-model:value="addForm.eventType" 
-        filterable="filterable" 
+      <n-select
+        v-model:value="addForm.eventType"
+        filterable="filterable"
         :options="eventTypeOptions"
       ></n-select>
     </n-form-item-gi>
   </n-grid>
-  <n-grid 
-    x-gap="12" 
+  <n-grid
+    x-gap="12"
     :cols="1"
   >
-    <n-form-item-gi 
-      label="備註" 
+    <n-form-item-gi
+      label="備註"
       path="memo"
     >
-      <n-input 
+      <n-input
         type="textarea"
         v-model:value="addForm.memo"
-        placeholder="memo" 
-        clearable="clearable" 
+        placeholder="memo"
+        clearable="clearable"
         maxlength="20"
-        show-count="show-count" 
+        show-count="show-count"
         :autosize="textareaSize"
       ></n-input>
     </n-form-item-gi>

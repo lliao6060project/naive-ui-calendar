@@ -24,18 +24,17 @@ export interface ReturnUseCalendarEvents {
 
   restructureData: (data: CustomEvent[]) => RestructureEvent[]
 
-  handleUpdateEventList: (addNewEventArray: CustomEvent[], type: 'add' | 'edit') => Recordable[]
+  handleUpdateEventList: (addNewEventArray: CustomEvent[], type: 'add' | 'edit' | 'delete') => Recordable[]
   handleUpdateCurrentDateEvent: (data: Recordable[], currentDate: string) => CustomEvent[]
 
   handleOpenEditModal: (eventTarget: unknown | Partial<RestructureEventItem>) => void 
-  handleEventDelete: (data: unknown | RestructureEvent[]) => void
   resetDetailForm: (data: unknown | RestructureEvent[]) => void
 }
 
 const { format } = useDateUtils()
 
 export default function useCalendarEvent(): ReturnUseCalendarEvents {
-  const { 
+  const {
     loading,
 
     handleCompareDate,
@@ -74,13 +73,14 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
     copidData.forEach((item, i) => {
       let result = {}
       const event = restructureEvents[i]
-      result = {
-        ...item,
-        event: event
+      if(event.length > 0) {
+        result = {
+          ...item,
+          event: event
+        }
+        returnResult.push(result as RestructureEvent)
       }
-      returnResult.push(result as RestructureEvent)
     })
-    
     returnResult.sort((a, b) => {
       return new Date(a.date).getTime() > new Date(b.date).getTime() ? 1 : -1
     })
@@ -89,8 +89,9 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
   }
 
   //handle event methods
-  function handleUpdateEventList(addNewEventArray: CustomEvent[], type: 'add' | 'edit' = 'add') {
+  function handleUpdateEventList(addNewEventArray: CustomEvent[], type: 'add' | 'edit' | 'delete' = 'add') {
     let result: Recordable[] = []
+    let msg: string = ''
 
     const reduceData = groupBy(addNewEventArray, 'date')
     Object.entries(reduceData).forEach(([key, value]) => {
@@ -99,16 +100,23 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
         event: value as RestructureEventItem
       })
     })
-    
+
     result = restructureData(result as CustomEvent[])
 
     loading.value = true
     showDetailDrawer.value = false
     nextTick(() => {
-      window.$message.success(type == 'add' ? '新增成功' : '修改成功')
-      type === 'add' 
-      ? ''
-      : toggleEditDialogFormVisible(false)
+      if(type === 'add') {
+        msg = '新增成功'
+      } else if(type === 'edit') {
+        msg = '編輯成功'
+        toggleEditDialogFormVisible(false)
+      } else {
+        msg = '刪除成功'
+        toggleEditDialogFormVisible(false)
+      }
+
+      window.$message.success(msg)
       loading.value = false
     });
 
@@ -132,32 +140,10 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
   }
 
   //modal
-  //edit & delete
   function handleOpenEditModal(eventTarget: unknown | Partial<RestructureEventItem>) {
     const copidData = JSON.parse(JSON.stringify(eventTarget))
     updatePropsData(copidData)
     toggleEditDialogFormVisible(true)
-  }
-
-  function handleEventDelete(data: unknown | RestructureEvent[]) {
-    (data as RestructureEvent[]).map((item: RestructureEvent) => {
-      if(handleCompareDate(item.date, propsData.value.date)) {
-        const index = item.event.findIndex((v: RestructureEventItem) => propsData.value.id === v.id)
-        item.event.splice(index, 1)
-        return {
-          ...item
-        }
-      }
-    }) 
-
-    loading.value = true
-    showDetailDrawer.value = false
-    nextTick(() => {
-      updatePropsData(data)
-      window.$message.success('刪除成功')
-      toggleEditDialogFormVisible(false)
-      loading.value = false
-    });
   }
 
   function resetDetailForm(data: unknown | RestructureEvent[]) {
@@ -171,7 +157,6 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
     })
 
     const matchedData = originData.filter(Boolean)
-    
     loading.value = true
     nextTick(() => {
       updatePropsData(matchedData[0])
@@ -189,7 +174,7 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
       acc[key].push(...obj.event);
       return acc;
     }, {});
-  }  
+  }
 
   return {
     showDetailDrawer,
@@ -200,7 +185,6 @@ export default function useCalendarEvent(): ReturnUseCalendarEvents {
     handleUpdateCurrentDateEvent,
 
     handleOpenEditModal,
-    handleEventDelete,
     resetDetailForm,
   }
 }

@@ -81,7 +81,6 @@ export default function useCalendar(): ReturnUseCalendar {
     let calendarDate = new Date(calendar)
     return isSameDate(currentDate, calendarDate)
   }
-  
 
   function isDateDisabled (timestamp: number) {
     return !isThisMonth(timestamp)
@@ -119,10 +118,9 @@ export default function useCalendar(): ReturnUseCalendar {
 
     returnTypeObj = result as TypeObj
 
-  
     return(
-      <NTag 
-        type={returnTypeObj?.type} 
+      <NTag
+        type={returnTypeObj?.type}
         size={'small'}
       >{ returnTypeObj?.text }</NTag>
     )

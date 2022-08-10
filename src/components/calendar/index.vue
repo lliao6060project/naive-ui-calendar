@@ -1,7 +1,7 @@
 <script setup lang='ts' name='Calendar'>
   import type { FormRef } from '@/common/types'
-  import type { Event, CustomEvent } from './composables/useCalendar' 
-  import type { RestructureEventItem, RestructureEvent } from './composables/useCalendarEvents'
+  import type { Event, CustomEvent } from './composables/useCalendar'
+  import type { RestructureEvent } from './composables/useCalendarEvents'
   import useCalendar from './composables/useCalendar'
   import useCalendarEvents from './composables/useCalendarEvents'
   import useDateUtils from './composables/useDateUtils'
@@ -9,6 +9,16 @@
   import CalendarAddModal from './components/calendar-add-modal.vue';
   import CalendarEditModal from './components/calendar-edit-modal.vue'
   import dayjs from 'dayjs'
+
+  const props = defineProps({
+    calendarData: {
+      type: Array as () => Array<CustomEvent>
+    },
+    onDayNoEvent: {
+      type: String,
+      default: '當天沒排行程',
+    }
+  })
 
   const tablePropsStore = useTablePropsStore()
 
@@ -27,98 +37,26 @@
     eventImportantText,
   } = useCalendar()
 
-  const { 
+  const {
     showDetailDrawer,
-    
     restructureData,
-    
     handleUpdateEventList,
     handleUpdateCurrentDateEvent,
 
     handleOpenEditModal,
-    handleEventDelete,
     resetDetailForm,
   } = useCalendarEvents()
 
-  const { 
-    format,
-    isSameMonth 
-  } = useDateUtils()
+  const { format, isSameMonth } = useDateUtils()
 
-
-  const { toggleEditDialogFormVisible, updatePropsData, toggleAddDialogFormVisible } = tablePropsStore
   const {
     propsData,
     addDialogFormVisible,
     editDialogFormVisible,
   } = storeToRefs(tablePropsStore)
 
-  let customEventArray = reactive<CustomEvent[]>([
-    {
-      date: '2022-7-31',
-      event: [
-        {
-          id: `past-a-${Math.floor(Math.random()*10)}`,
-          type: 'error',
-          eventType: '0',
-          title: '10:30 會議1',
-          time: '10:30',
-          memo: '去了就知道開什麼會',
-        },
-        {
-          id: `past-b-${Math.floor(Math.random()*15)}`,
-          type: 'warning',
-          eventType: '0',
-          title: '13:30 會議2',
-          time: '13:30',
-          memo: '某某專案的會議',
-        },
-      ]
-    },
-    {
-      date: '2022-8-4',
-      event: [
-        {
-          id: `test-a-${Math.floor(Math.random()*10)}`,
-          type: 'error',
-          eventType: '0',
-          title: '10:30 會議1',
-          time: '10:30',
-          memo: '去了就知道開什麼會',
-        },
-        {
-          id: `test-b-${Math.floor(Math.random()*15)}`,
-          type: 'warning',
-          eventType: '0',
-          title: '13:30 會議2',
-          time: '13:30',
-          memo: '某某專案的會議',
-        },
-        {
-          id: `test-c-${Math.floor(Math.random()*20)}`,
-          type: 'info',
-          eventType: '1',
-          title: '今天記得點餐',
-          time: '16:30',
-          memo: '明天點餐截止',
-        },
-      ]
-    },
-    {
-      date: '2022-8-13',
-      event: [
-        {
-          id: `test-d-${Math.floor(Math.random()*25)}`,
-          type: 'error',
-          eventType: '0',
-          title: 'XX專案要上線',
-          time: '9:30',
-          memo: '重要重要重要',
-        },
-      ]
-    },
-  ])
-
+  //data
+  const customEventData = ref<CustomEvent[]>([])
   const data = ref<Recordable[]>([])
   const calendarAddModal = ref<FormRef | Nullable<any>>(null)
   const calendarEditModal = ref<FormRef | Nullable<any>>(null)
@@ -126,103 +64,120 @@
     return isSameMonth(currentDate.value, calendarModel.value)
   })
 
-
-  function handleUpdateData() {
-    data.value = restructureData(customEventArray)
-  }
-
   function handleUpdateCalendarValue(date: string) {
     currentDate.value = date
     currentDay.value = dayjs(date).get('day')
     currentDateEvent.value = handleUpdateCurrentDateEvent(data.value, currentDate.value)
     showDetailDrawer.value = true
   }
+
   //custom
   function handlePreviewCustomEvent(customEvent: unknown | RestructureEvent, index: number) {
     currentDate.value = (customEvent as RestructureEvent).date
-    handleEditEvent((customEvent as RestructureEvent).event[index])
+    handleOpenEditModal((customEvent as RestructureEvent).event[index])
   }
 
-
   //modal
-  function handleAddNewEvent(newEvent: unknown | Partial<RestructureEventItem>) {
-    customEventArray.forEach((item, i) => {
-      if(!(item['date'] === currentDate.value)) {
-        customEventArray.push({
-          date: currentDate.value,
-          event: newEvent as Event[]
-        })
+  function handleAddNewEvent(newEvent: unknown | Partial<Event>) {
+    const index = customEventData.value.findIndex((v: CustomEvent) => currentDate.value === v.date)
+    if(index !== -1) {
+      customEventData.value[index].event.push(newEvent as Event)
+    } else {
+      customEventData.value.push(...new Set([{
+        date: currentDate.value,
+        event: [newEvent as Event]
+      }]))
+    }
+
+    data.value = handleUpdateEventList(customEventData.value, 'add')
+  }
+
+  function handleEventDelete() {
+    const result = (customEventData.value as CustomEvent[]).map((item: CustomEvent) => {
+      if(handleCompareDate(item.date, propsData.value.date)) {
+        const index = item.event.findIndex((v: Event) => propsData.value.id === v.id)
+        item.event.splice(index, 1)
+      }
+      return {
+        ...item
       }
     })
 
-    const filteredList = [...new Set(customEventArray.map(item => JSON.stringify(item)))].map(item => JSON.parse(item))
-    customEventArray = filteredList
-    data.value = handleUpdateEventList(filteredList, 'add')
+    loading.value = true
+    nextTick(() => {
+      customEventData.value = [...new Set(result)].sort((a, b) => {
+      return new Date(a.date).getTime() > new Date(b.date).getTime() ? 1 : -1
+    })
+      data.value = handleUpdateEventList(customEventData.value, 'delete')
+      loading.value = false
+    });
   }
 
-  function handleEditEvent(eventTarget: unknown | Partial<RestructureEventItem>) {
-    const copidData = JSON.parse(JSON.stringify(eventTarget))
-    updatePropsData(copidData)
-    toggleEditDialogFormVisible(true)
-  }
 
   function beforeEditSubmit() {
-    let editFormData = propsData.value
-    const copidData = JSON.parse(JSON.stringify(data.value))
-
-    Object.entries(copidData).forEach(([key, value]) => {
-      ((value as CustomEvent).event).map((event: Event) => {
-        const index = (value as CustomEvent).event.findIndex((v: Event) => propsData.value.id === v.id)
-        value.event[index] = editFormData
-      })
+    const result = (customEventData.value as CustomEvent[]).map((item: CustomEvent) => {
+      if(handleCompareDate(item.date, propsData.value.date)) {
+        const index = item.event.findIndex((v: Event) => propsData.value.id === v.id)
+        item.event[index] = propsData.value
+      }
+      return {
+        ...item
+      }
     })
 
-    customEventArray = [...copidData]
-    data.value = handleUpdateEventList(customEventArray, 'edit')
+    loading.value = true
+    nextTick(() => {
+      customEventData.value = result
+      data.value = handleUpdateEventList(customEventData.value, 'edit')
+      loading.value = false
+    });
   }
 
-  onMounted(() => {  
-    handleUpdateData()
+  watch(props, (nV) => {
+    if(nV.calendarData) {
+      customEventData.value = nV.calendarData
+      data.value = restructureData(customEventData.value)
+    }
+  }, {
+    immediate: true
   })
-
-
 
 </script>
 
 <template>
-<n-calendar 
-  class="h-100" 
+<n-calendar
+  class="h-100"
   v-model:value="calendarModel" #="{ year, month, date }" 
   :is-date-disabled="isDateDisabled"
 >
-  <n-text 
-    strong="strong" 
+  <n-text
+    strong="strong"
     @click="handleUpdateCalendarValue(`${year}-${month}-${date}`)"
     :depth="isDateDisabled(new Date(`${year}-${month}-${date}`).getTime()) ? 4 : 1"
   >{{ year }}-{{ month }}-{{ date }}
   </n-text>
   <div 
-    v-for="(item, i) in data" 
+    v-for="(item, i) in data"
     :key="`item.date-${i}`"
   >
     <template v-if="handleCompareDate(item.date, `${year}-${month}-${date}`)">
       <n-list>
-        <n-thing 
-          v-for="(eventItem, i) in item.event" 
+        <n-thing
+          v-for="(eventItem, i) in item.event"
           :key="`event.time-${i}`"
           @click="handlePreviewCustomEvent(item, i)"
         >
           <template v-if="isSameMonth(`${year}-${month}-${date}`, calendarModel)">
-            <n-badge 
-              dot="dot" 
+            <n-badge
+              dot="dot"
               :type="eventItem.type"
             >
               <n-text>{{ eventItem.title }}</n-text>
             </n-badge>
           </template>
           <template v-else>
-            <n-badge 
-              dot="dot" 
+            <n-badge
+              dot="dot"
               :type="eventItem.type"
             >
               <n-text style="color: gray; opacity: 0.7;">{{ eventItem.title }}</n-text>
@@ -235,17 +190,17 @@
 </n-calendar>
 
 <n-drawer 
-  v-model:show="showDetailDrawer" 
+  v-model:show="showDetailDrawer"
   :width="650"
 >
-  <n-drawer-content 
-    :title="drawerTitle" 
+  <n-drawer-content
+    :title="drawerTitle"
     closable="closable"
   >
     <template v-if="currentDateEvent.length > 0">
-      <n-table 
-        :bordered="false" 
-        size="small" 
+      <n-table
+        :bordered="false"
+        size="small"
         striped="striped"
       >
         <thead>
@@ -261,8 +216,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr 
-            v-for="(eventItem, index) in currentDateEvent" 
+          <tr
+            v-for="(eventItem, index) in currentDateEvent"
             :key="`eventItem-${index}`"
           >
             <td>{{ index+1 }}</td>
@@ -275,16 +230,16 @@
             <td>{{ eventItem?.title }}</td>
             <td>{{ eventItem?.memo }}</td>
             <td>
-              <n-button 
-                strong="strong" 
-                secondary="secondary" 
-                round="round" 
+              <n-button
+                strong="strong"
+                secondary="secondary"
+                round="round"
                 type="primary"
-                @click="handleEditEvent(eventItem)"
-              > 
+                @click="handleOpenEditModal(eventItem)"
+              >
                 <template #icon>
-                  <Icon 
-                    name="material-symbols:edit-square-outline" 
+                  <Icon
+                    name="material-symbols:edit-square-outline"
                     size="20"
                   ></Icon>
                 </template>
@@ -294,66 +249,66 @@
         </tbody>
       </n-table>
 
-      <float-btn 
-        v-if="showCreateEventModal" 
-        @click="toggleAddDialogFormVisible(true)"
+      <float-btn
+        v-if="showCreateEventModal"
+        @click="addDialogFormVisible = true"
       ></float-btn>
     </template>
 
     <template v-else>
-      <n-h3>當天沒排行程</n-h3>
-      <float-btn 
-        v-if="showCreateEventModal" 
-        @click="toggleAddDialogFormVisible(true)"
+      <n-h3>{{ props.onDayNoEvent }}</n-h3>
+      <float-btn
+        v-if="showCreateEventModal"
+        @click="addDialogFormVisible = true"
       ></float-btn>
     </template>
   </n-drawer-content>
 </n-drawer>
 
 <dialogcom-view 
-  v-model:show="addDialogFormVisible" 
+  v-model:show="addDialogFormVisible"
   :title="`新增${currentDate}日程`"
 >
   <template #form>
-    <calendar-add-modal 
-      ref="calendarAddModal" 
-      :date="currentDate" 
+    <calendar-add-modal
+      ref="calendarAddModal"
+      :date="currentDate"
       @new-event="handleAddNewEvent"
     ></calendar-add-modal>
   </template>
   <template #btn>
-    <n-button 
-        type="info" 
+    <n-button
+        type="info"
         @click="calendarAddModal?.handleValidate"
       >新增</n-button>
-    <n-button @click="toggleAddDialogFormVisible(false)">取消</n-button>
+    <n-button @click="addDialogFormVisible = false">取消</n-button>
   </template>
 </dialogcom-view>
 
 <dialogcom-view 
-  :title="`${currentDate}日程修改`" 
+  :title="`${currentDate}日程修改`"
   v-model:show="editDialogFormVisible"
 >
   <template #form>
-    <calendar-edit-modal 
-      ref="calendarEditModal" 
-      :date="propsData.date" 
+    <calendar-edit-modal
+      ref="calendarEditModal"
+      :date="propsData.date"
       :formData="propsData"
       @on-submit="beforeEditSubmit"
     ></calendar-edit-modal>
   </template>
 
   <template #btn>
-    <n-button 
-      type="primary" 
-      :loading="loading" 
+    <n-button
+      type="primary"
+      :loading="loading"
       @click="calendarEditModal?.handleValidate"
     >確認</n-button>
-    <n-button 
-      type="error" 
+    <n-button
+      type="error"
       @click="resetDetailForm(data)"
     >重置</n-button>
-    <n-button @click="handleEventDelete(data)">刪除</n-button>
+    <n-button @click="handleEventDelete">刪除</n-button>
   </template>
 </dialogcom-view>
 </template>

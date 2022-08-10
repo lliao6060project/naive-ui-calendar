@@ -8,7 +8,7 @@ export interface ReturnUseDateUtils {
 }
 export default function useDateUtils(): ReturnUseDateUtils {
   function format(date: string, type: 'date' | 'time') {
-    return type === 'date' 
+    return type === 'date'
     ? dayjs(date).format('YYYY-MM-DD')
     : dayjs(date).format('HH:mm')
   }
