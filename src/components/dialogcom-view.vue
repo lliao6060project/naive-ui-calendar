@@ -44,34 +44,34 @@ const deleteModalSize = {
 </script>
 
 <template>
-<n-modal 
-  class="custom-card" 
-  v-model:show="showDialog" 
+<n-modal
+  class="custom-card"
+  v-model:show="showDialog"
   preset="card"
-  :style="modalType === 'delete' ? deleteModalSize : defaultModalSize" 
-  :title="title" 
-  size="huge" 
+  :style="modalType === 'delete' ? deleteModalSize : defaultModalSize"
+  :title="title"
+  size="huge"
   :bordered="false"
-  :segmented="segmented" 
-  @after-leave="emit('cancel')" 
+  :segmented="segmented"
+  @after-leave="emit('cancel')"
   @mask-click="emit('cancel')"
 >
   <n-scrollbar :max-height='device == "mobile" ? "70vh" : "55vh"'>
     <slot name="form"></slot>
   </n-scrollbar><template #footer>
-    <n-space 
-      class="dialog-footer" 
+    <n-space
+      class="dialog-footer"
       justify="center"
     >
       <slot name="btn">
-        <n-button 
-          v-if="showBtn.submit" 
-          type="primary" 
-          @click='emit("submit")' 
+        <n-button
+          v-if="showBtn.submit"
+          type="primary"
+          @click='emit("submit")'
           size="small"
         >確認</n-button>
-        <n-button 
-          v-if="showBtn.cancel" 
+        <n-button
+          v-if="showBtn.cancel"
           @click='emit("cancel")'
           size="small"
         >取消</n-button>

@@ -69,7 +69,7 @@ defineExpose({
 </script>
 
 <template>
-<n-form 
+<n-form
   ref="addFormRef"
   :model="addForm"
   :rules="addFormRules"
@@ -83,7 +83,7 @@ defineExpose({
       label="title"
       path="title"
     >
-      <n-input 
+      <n-input
         v-model:value="addForm.title"
         placeholder="title"
         clearable="clearable"
@@ -93,7 +93,7 @@ defineExpose({
       label="重要度"
       path="type"
     >
-      <n-select 
+      <n-select
         v-model:value="addForm.type"
         filterable="filterable"
         :options="importantOptions"

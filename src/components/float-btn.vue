@@ -21,8 +21,8 @@ function check(method: string, emitName: string): void {
 <n-button
   :title="props.title"
   :bordered="false"
-  strong 
-  circle 
+  strong
+  circle
   color="#8a2be2"
   class="float-btn"
   @click='check("insert", "handleAdd")'
@@ -36,12 +36,12 @@ function check(method: string, emitName: string): void {
 
 <style lang='scss'>
 .float-btn {
-  width: 50px; 
-  height: 50px; 
-  position: fixed; 
+  width: 50px;
+  height: 50px;
+  position: fixed;
   bottom: 1rem;
-  right: 2.5rem; 
+  right: 2.5rem;
   border-radius: 30px;
-  z-index: 9999; 
+  z-index: 9999;
 }
 </style>

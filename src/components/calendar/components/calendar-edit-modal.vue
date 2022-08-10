@@ -62,7 +62,7 @@ defineExpose({
 </script>
 
 <template>
-<n-form 
+<n-form
   ref="editFormRef"
   :model="formData"
   :rules="editFormRules"
@@ -76,7 +76,7 @@ defineExpose({
       label="title"
       path="title"
     >
-      <n-input 
+      <n-input
         v-model:value="formData.title"
         placeholder="title"
         clearable="clearable"
@@ -102,11 +102,11 @@ defineExpose({
         clearable="clearable"
       ></n-date-picker>
     </n-form-item-gi>
-    <n-form-item-gi 
+    <n-form-item-gi
       label="事件類型"
       path="eventType"
     >
-      <n-select 
+      <n-select
         v-model:value="formData.eventType"
         filterable="filterable"
         :options="eventTypeOptions"
